@@ -17,6 +17,27 @@ USE WAREHOUSE COMPUTE_WH;
 -- (paste Cortex Code output here)
 
 -- ============================================================
+-- STEP 6 — Dynamic Table: Hamburg sales with date spine
+--
+-- Filters ORDERS_V to Hamburg and uses a date spine so that
+-- days with zero orders appear as $0 rows rather than being
+-- absent. This is the sales-side input to the Semantic View.
+--
+-- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):
+--   "Create a Dynamic Table named SALES_HAMBURG_DT in
+--    TASTY_BYTES.HARMONIZED with TARGET_LAG = '1 day' and
+--    WAREHOUSE = COMPUTE_WH. Use a date spine of dates from
+--    2019-01-01 for 3000 rows. LEFT JOIN
+--    TASTY_BYTES.ANALYTICS.ORDERS_V on DATE(order_ts) = the
+--    date spine date, filtered to country = 'Germany' and
+--    primary_city = 'Hamburg'. SELECT the date spine date AS
+--    order_date, ZEROIFNULL(SUM(price)) AS daily_sales, and
+--    COUNT(order_id) AS num_orders. Group by order_date."
+-- ============================================================
+
+-- (paste Cortex Code output here)
+
+-- ============================================================
 -- STEP 2 — Create UDF: Inches to Millimeters
 -- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):
 --   "Create a SQL UDF named INCH_TO_MILLIMETER in
