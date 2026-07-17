@@ -19,17 +19,26 @@ USE WAREHOUSE COMPUTE_WH;
 --    TASTY_BYTES.ANALYTICS. Reference two tables:
 --      sales AS tasty_bytes.analytics.orders_v
 --      weather AS tasty_bytes.harmonized.weather_hamburg_dt
---    Define a LEFT JOIN relationship joining sales to weather on
---    DATE(sales.order_ts) = weather.date_valid_std,
+--
+--    On the sales table, define a computed dimension named ORDER_DATE
+--    with expr: DATE(order_ts). Define a LEFT JOIN from sales to weather
+--    on sales.ORDER_DATE = weather.date_valid_std,
 --    sales.primary_city = weather.city_name, and
 --    sales.country = weather.country_desc.
---    Add three DIMENSIONS: weather.date_valid_std AS date,
---    weather.city_name AS city, weather.country_desc AS country.
---    Add four METRICS: SUM(sales.price) AS daily_sales,
+--
+--    The weather table is pre-aggregated — do NOT declare any facts on
+--    it. Declare only metrics with explicit aggregation functions.
+--    Add unique_keys [[date_valid_std, city_name, country_desc]] on
+--    the weather table.
+--
+--    Dimensions on weather: date_valid_std AS date, city_name AS city,
+--    country_desc AS country.
+--    Metrics: SUM(sales.price) AS daily_sales,
 --    AVG(weather.avg_temperature_celsius) AS avg_temperature_celsius,
 --    MAX(weather.max_wind_speed_mph) AS max_wind_speed_mph,
 --    AVG(weather.avg_precipitation_mm) AS avg_precipitation_mm.
---    Add synonyms and comments to each dimension and metric."
+--
+--    Do not include any 'comment' fields anywhere in the YAML spec."
 -- ============================================================
 
 -- (paste Cortex Code output here)
@@ -41,13 +50,19 @@ USE WAREHOUSE COMPUTE_WH;
 -- view, enabling natural-language queries in CoWork.
 --
 -- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):
---   "Create a Cortex Agent named HAMBURG_AGENT in
---    TASTY_BYTES.ANALYTICS. Configure it to use automatic
---    orchestration and set its response instructions to give
---    concise, accurate answers about Tasty Bytes sales and
---    Hamburg weather. Add a tool of type
---    cortex_analyst_text_to_sql named TastyBytesAnalyst backed
---    by the semantic view TASTY_BYTES.ANALYTICS.HAMBURG_INSIGHTS_SV."
+--   "Write a CREATE OR REPLACE AGENT SQL statement for
+--    TASTY_BYTES.ANALYTICS.HAMBURG_AGENT using a FROM SPECIFICATION
+--    $$...$$ block (not cortex_agent_deploy). In the spec:
+--    set orchestration: auto as a flat key (not nested under models).
+--    Set instructions.response to: 'Give concise, accurate answers
+--    about Tasty Bytes sales and Hamburg weather.'
+--    Add one tool using a tool_spec wrapper with:
+--      type: cortex_analyst_text_to_sql
+--      name: TastyBytesAnalyst
+--      description: 'Answers questions about Tasty Bytes Hamburg
+--                    sales and weather'
+--    Add tool_resources pointing to semantic_view
+--    TASTY_BYTES.ANALYTICS.HAMBURG_INSIGHTS_SV."
 -- ============================================================
 
 -- (paste Cortex Code output here)
@@ -55,7 +70,7 @@ USE WAREHOUSE COMPUTE_WH;
 -- ============================================================
 -- STEP 3 — Register the agent in Snowflake CoWork
 --
--- CoWork (Snowflake Intelligence) is the chat UI where analysts
+-- Snowflake CoWork is the chat UI where analysts
 -- can ask the agent questions in natural language.
 --
 -- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):

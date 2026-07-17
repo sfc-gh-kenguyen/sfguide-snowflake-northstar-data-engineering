@@ -141,7 +141,8 @@ JOIN tasty_bytes.raw_pos.location        l  ON oh.location_id  = l.location_id;
 -- STEP 1 — Create a CSV file format
 -- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):
 --   "Create a CSV file format named CSV_FF in
---    TASTY_BYTES.PUBLIC with type = 'csv'."
+--    TASTY_BYTES.PUBLIC with type = 'csv' and
+--    ERROR_ON_COLUMN_COUNT_MISMATCH = FALSE."
 -- ============================================================
 
 -- (paste Cortex Code output here)
