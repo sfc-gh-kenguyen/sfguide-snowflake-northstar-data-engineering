@@ -48,10 +48,12 @@ USE WAREHOUSE COMPUTE_WH;
 -- (paste Cortex Code output here)
 
 -- ============================================================
--- STEP 3 — Dynamic Table: daily weather for all Tasty Bytes cities
+-- STEP 3 — Dynamic Table: daily weather for Hamburg
 --
--- This DT joins the live Pelmorex Marketplace share with the
--- Tasty Bytes COUNTRY table.
+-- Joins the live Pelmorex Marketplace share with postal_codes
+-- to get Hamburg weather data. Filters directly to Hamburg
+-- rather than joining to RAW_POS.COUNTRY (which doesn't
+-- contain city names in this dataset).
 --
 -- ⚠ REFRESH_MODE = FULL is required because the base object
 -- (Pelmorex share) is owned by a third party; Snowflake cannot
@@ -61,12 +63,13 @@ USE WAREHOUSE COMPUTE_WH;
 --   "Create a Dynamic Table named DAILY_WEATHER_DT in
 --    TASTY_BYTES.HARMONIZED with TARGET_LAG = '1 day',
 --    WAREHOUSE = COMPUTE_WH, and REFRESH_MODE = FULL.
---    It should join Pelmorex_Weather_Source_frostbyte.onpoint_id.history_day
---    with onpoint_id.postal_codes on postal_code and country,
---    then join TASTY_BYTES.RAW_POS.COUNTRY on iso_country = hd.country
---    and city = hd.city_name. SELECT all history_day columns plus
---    TO_VARCHAR(date_valid_std, 'YYYY-MM') AS yyyy_mm,
---    pc.city_name AS city, and c.country AS country_desc."
+--    Join Pelmorex_Weather_Source_frostbyte.onpoint_id.history_day
+--    (alias hd) with onpoint_id.postal_codes (alias pc) on
+--    pc.postal_code = hd.postal_code and pc.country = hd.country.
+--    Filter WHERE pc.city_name = 'Hamburg'.
+--    SELECT hd.*, TO_VARCHAR(hd.date_valid_std, 'YYYY-MM') AS
+--    yyyy_mm, pc.city_name AS city, and 'Germany' AS country_desc.
+--    Do NOT join to TASTY_BYTES.RAW_POS.COUNTRY."
 -- ============================================================
 
 -- (paste Cortex Code output here)
@@ -91,19 +94,23 @@ USE WAREHOUSE COMPUTE_WH;
 -- ============================================================
 -- STEP 5 — Dynamic Table: Hamburg weather with metric conversions
 --
--- Uses both UDFs to convert temperature and precipitation into
--- metric units. This DT powers the semantic view in 03_delivery.
+-- Aggregates DAILY_WEATHER_DT (which has one row per postal code)
+-- into one row per date using MAX aggregation. Converts
+-- temperature and precipitation to metric units via UDFs.
+-- Filter uses 'city' column (the pc.city_name alias from
+-- DAILY_WEATHER_DT), not 'city_name' (which is from history_day).
 --
 -- ▶ PROMPT (send this to Cortex Code, then run the SQL it writes):
 --   "Create a Dynamic Table named WEATHER_HAMBURG_DT in
 --    TASTY_BYTES.HARMONIZED with TARGET_LAG = '1 day' and
---    WAREHOUSE = COMPUTE_WH. Query DAILY_WEATHER_DT filtered to
---    Germany / Hamburg. SELECT date_valid_std, city_name,
---    country_desc, and call the FAHRENHEIT_TO_CELSIUS UDF on
---    avg_temperature_air_2m_f to produce avg_temperature_celsius,
---    INCH_TO_MILLIMETER on tot_precipitation_in to produce
---    avg_precipitation_mm, and MAX(max_wind_speed_100m_mph) AS
---    max_wind_speed_mph. Group by date, city, and country."
+--    WAREHOUSE = COMPUTE_WH. Query DAILY_WEATHER_DT filtered
+--    to city = 'Hamburg'. SELECT date_valid_std,
+--    MAX(TASTY_BYTES.ANALYTICS.FAHRENHEIT_TO_CELSIUS(
+--    avg_temperature_air_2m_f)) AS avg_temperature_celsius,
+--    MAX(TASTY_BYTES.ANALYTICS.INCH_TO_MILLIMETER(
+--    tot_precipitation_in)) AS avg_precipitation_mm,
+--    MAX(max_wind_speed_100m_mph) AS max_wind_speed_mph.
+--    GROUP BY date_valid_std only."
 -- ============================================================
 
 -- (paste Cortex Code output here)
